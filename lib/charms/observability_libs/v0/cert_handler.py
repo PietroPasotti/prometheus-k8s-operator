@@ -47,10 +47,10 @@ try:
         generate_csr,
         generate_private_key,
     )
-except ImportError:
+except ImportError as e:
     raise ImportError(
         "charms.tls_certificates_interface.v2.tls_certificates is missing; please get it through charmcraft fetch-lib"
-    )
+    ) from e
 import logging
 
 from ops.charm import CharmBase, RelationBrokenEvent
@@ -62,7 +62,7 @@ logger = logging.getLogger(__name__)
 
 LIBID = "b5cd5cd580f3428fa5f59a8876dcbe6a"
 LIBAPI = 0
-LIBPATCH = 4
+LIBPATCH = 5
 
 
 class CertChanged(EventBase):
@@ -352,6 +352,11 @@ class CertHandler(Object):
         rel = self._peer_relation
         assert rel is not None  # For type checker
         rel.data[self.charm.unit].update({"chain": json.dumps(value)})
+
+    @property
+    def chain(self) -> List[str]:
+        """Return the ca chain."""
+        return self._chain
 
     def _on_certificate_expiring(
         self, event: Union[CertificateExpiringEvent, CertificateInvalidatedEvent]
